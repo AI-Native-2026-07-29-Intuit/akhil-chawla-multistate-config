@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: multistate
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: multistate-api capstone -- GitOps overlays + observability
+  sourceRepos:
+    - https://github.com/AI-Native-2026-07-29-Intuit/akhil-chawla-multistate-config.git
+    - https://github.com/uptimecrew/multistate-config.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: multistate-dev
+    - server: https://kubernetes.default.svc
+      namespace: multistate-staging
+    - server: https://kubernetes.default.svc
+      namespace: multistate-prod
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - {group: "", kind: Namespace}
+    - {group: "", kind: Service}
+    - {group: "", kind: ConfigMap}
+    - {group: "", kind: Secret}
+    - {group: "", kind: ServiceAccount}
+    - {group: "", kind: ResourceQuota}
+    - {group: "", kind: LimitRange}
+    - {group: apps, kind: Deployment}
+    - {group: autoscaling, kind: HorizontalPodAutoscaler}
+    - {group: policy, kind: PodDisruptionBudget}
+    - {group: networking.k8s.io, kind: Ingress}
+    - {group: networking.k8s.io, kind: NetworkPolicy}
+    - {group: monitoring.coreos.com, kind: ServiceMonitor}
+    - {group: monitoring.coreos.com, kind: PrometheusRule}
