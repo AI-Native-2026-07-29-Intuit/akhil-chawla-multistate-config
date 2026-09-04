@@ -37,9 +37,11 @@ spec:
     metadata:
       name: multistate-api-{{env}}
       namespace: argocd
-      # Do NOT set resources-finalizer here. preserveResourcesOnDeletion: true
-      # above tells the ApplicationSet controller to omit that finalizer so an
-      # env dropped from the matrix keeps its Application + cluster resources.
+      # preserveResourcesOnDeletion: true (spec.syncPolicy above) instructs the
+      # ApplicationSet controller to OMIT resources-finalizer on generated
+      # Applications at runtime so deleted matrix entries leave cluster workloads
+      # in place (see multistate-api/GITOPS.md Run 1 vs Run 2). Task 1 finalizer
+      # shape is documented there; live apps intentionally have no cascade finalizer.
       annotations:
         argocd.argoproj.io/sync-wave: "{{wave}}"
       labels:

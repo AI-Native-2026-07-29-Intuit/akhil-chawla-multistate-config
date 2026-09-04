@@ -1,6 +1,6 @@
 # argocd-system/notifications-cm.yaml
-# Wires argocd-notifications-controller to Slack. The Bot OAuth token
-# (xoxb-...) is held in argocd-notifications-secret:
+# Wires argocd-notifications-controller to Slack. Bot OAuth token (xoxb-...)
+# or Incoming Webhook URL is held in argocd-notifications-secret:
 #   kubectl create secret generic argocd-notifications-secret \
 #     --from-literal=slack-token="$SLACK_BOT_TOKEN" -n argocd
 # Never commit the token to Git.
@@ -14,9 +14,9 @@ data:
     token: $slack-token
 
   trigger.on-sync-failed: |
-    - description: Application sync failed or manifest generation failed.
+    - description: Application sync failed.
       send:    [app-sync-failed]
-      when:    (app.status.operationState != nil && app.status.operationState.phase in ['Error', 'Failed']) || (app.status.conditions != nil && len(app.status.conditions) > 0 && app.status.conditions[0].type == 'ComparisonError')
+      when:    app.status.operationState != nil && app.status.operationState.phase in ['Error', 'Failed']
 
   trigger.on-health-degraded: |
     - description: Application health degraded.
@@ -25,17 +25,20 @@ data:
 
   template.app-sync-failed: |
     message: |
-      {{.app.metadata.name}} sync FAILED.
+      {{.app.metadata.name}} sync FAILED at {{.app.status.operationState.finishedAt}}.
       Project:   {{.app.spec.project}}
-      Sync:      {{.app.status.sync.status}}
+      Revision:  {{.app.status.operationState.syncResult.revision}}
+      Phase:     {{.app.status.operationState.phase}}
+      Message:   {{.app.status.operationState.message}}
+      View:      https://argocd.uptimecrew.example.internal/applications/{{.app.metadata.name}}
     slack:
       attachments: |
         [{
           "title":   "{{.app.metadata.name}} sync failed",
           "color":   "#E96D76",
           "fields":  [
-            {"title": "Project",     "value": "{{.app.spec.project}}",           "short": true},
-            {"title": "Sync Status", "value": "{{.app.status.sync.status}}",     "short": true}
+            {"title": "Project",  "value": "{{.app.spec.project}}",  "short": true},
+            {"title": "Revision", "value": "{{.app.status.operationState.syncResult.revision}}", "short": true}
           ]
         }]
 
@@ -45,6 +48,7 @@ data:
       Project:   {{.app.spec.project}}
       Status:    {{.app.status.health.status}}
       Message:   {{.app.status.health.message}}
+      View:      https://argocd.uptimecrew.example.internal/applications/{{.app.metadata.name}}
     slack:
       attachments: |
         [{
@@ -57,6 +61,6 @@ data:
         }]
 
   subscriptions: |
-    - recipients: [slack:multi-state-deploys-akhil-chawla]
+    - recipients: [slack:multistate-deploys]
       triggers:   [on-sync-failed, on-health-degraded]
       selector:   team=multistate

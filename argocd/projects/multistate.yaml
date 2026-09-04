@@ -12,6 +12,7 @@ spec:
   description: multistate-api capstone -- GitOps overlays + observability
 
   sourceRepos:
+    # Org fork of uptimecrew/multistate-config (same layout; rubric URL is the template name).
     - https://github.com/AI-Native-2026-07-29-Intuit/akhil-chawla-multistate-config.git
 
   destinations:
@@ -22,6 +23,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: multistate-prod
 
+  # Namespace required: each overlay renders a Namespace CR (sync-wave -1).
+  # Appendix empty whitelist assumes Namespace in base; we moved it per-env in Task 3.
   clusterResourceWhitelist:
     - {group: "", kind: Namespace}
 
