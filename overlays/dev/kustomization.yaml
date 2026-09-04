@@ -14,7 +14,7 @@ components:
 images:
   - name: uptimecrew/multistate-api
     newName: uptimecrew/multistate-api
-    newTag: "does-not-exist-999"
+    newTag: "0.1.0"
 
 replicas:
   - name: multistate-api
