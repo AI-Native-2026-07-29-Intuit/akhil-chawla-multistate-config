@@ -1,3 +1,5 @@
+# TASK 4 sync-fail test — remove after Slack screenshot
+THIS_IS_INVALID_YAML: [[[
 # uptimecrew/multistate-config/overlays/dev/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
