@@ -22,10 +22,10 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: multistate-prod
 
-  clusterResourceWhitelist: []
+  clusterResourceWhitelist:
+    - {group: "", kind: Namespace}
 
   namespaceResourceWhitelist:
-    - {group: "", kind: Namespace}
     - {group: "", kind: Service}
     - {group: "", kind: ConfigMap}
     - {group: "", kind: Secret}
