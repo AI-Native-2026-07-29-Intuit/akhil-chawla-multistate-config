@@ -8,8 +8,8 @@ resources:
 
 namespace: multistate-dev
 
-commonAnnotations:
-  argocd.argoproj.io/sync-wave: "0"
+components:
+  - ../components/workload-sync-wave
 
 images:
   - name: uptimecrew/multistate-api
@@ -21,12 +21,6 @@ replicas:
     count: 1
 
 patches:
-  - target:
-      kind: Namespace
-    patch: |-
-      - op: add
-        path: /metadata/annotations/argocd.argoproj.io~1sync-wave
-        value: "-1"
   - target:
       kind: ConfigMap
       name: multistate-api-config
