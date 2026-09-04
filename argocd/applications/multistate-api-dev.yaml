@@ -20,6 +20,11 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: multistate-dev
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /status
   syncPolicy:
     automated:
       prune: true

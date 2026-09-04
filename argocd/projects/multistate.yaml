@@ -1,3 +1,6 @@
+# argocd/projects/multistate.yaml
+# AppProject scoping the multistate capstone team.
+# Every Application in this assignment has spec.project = multistate -- never "default".
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -7,9 +10,10 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   description: multistate-api capstone -- GitOps overlays + observability
+
   sourceRepos:
     - https://github.com/AI-Native-2026-07-29-Intuit/akhil-chawla-multistate-config.git
-    - https://github.com/uptimecrew/multistate-config.git
+
   destinations:
     - server: https://kubernetes.default.svc
       namespace: multistate-dev
@@ -17,17 +21,15 @@ spec:
       namespace: multistate-staging
     - server: https://kubernetes.default.svc
       namespace: multistate-prod
-  clusterResourceWhitelist:
-    - group: ""
-      kind: Namespace
+
+  clusterResourceWhitelist: []
+
   namespaceResourceWhitelist:
     - {group: "", kind: Namespace}
     - {group: "", kind: Service}
     - {group: "", kind: ConfigMap}
     - {group: "", kind: Secret}
     - {group: "", kind: ServiceAccount}
-    - {group: "", kind: ResourceQuota}
-    - {group: "", kind: LimitRange}
     - {group: apps, kind: Deployment}
     - {group: autoscaling, kind: HorizontalPodAutoscaler}
     - {group: policy, kind: PodDisruptionBudget}
@@ -35,3 +37,36 @@ spec:
     - {group: networking.k8s.io, kind: NetworkPolicy}
     - {group: monitoring.coreos.com, kind: ServiceMonitor}
     - {group: monitoring.coreos.com, kind: PrometheusRule}
+
+  namespaceResourceBlacklist:
+    - {group: "", kind: ResourceQuota}
+    - {group: "", kind: LimitRange}
+
+  syncWindows:
+    - kind: deny
+      schedule: "0 17 * * 5"
+      duration: 60h
+      applications:
+        - multistate-api-prod
+      manualSync: true
+
+  roles:
+    - name: developers
+      description: Read everything; sync dev and staging only.
+      policies:
+        - p, proj:multistate:developers, applications, get, multistate/*, allow
+        - p, proj:multistate:developers, applications, sync, multistate/multistate-api-dev, allow
+        - p, proj:multistate:developers, applications, sync, multistate/multistate-api-staging, allow
+        - p, proj:multistate:developers, applications, delete, multistate/*, deny
+        - p, proj:multistate:developers, logs, get, multistate/*, allow
+      groups:
+        - uptimecrew:multistate-engineers
+    - name: releasers
+      description: Full sync including prod. Cannot delete Applications.
+      policies:
+        - p, proj:multistate:releasers, applications, get, multistate/*, allow
+        - p, proj:multistate:releasers, applications, sync, multistate/*, allow
+        - p, proj:multistate:releasers, applications, action/*, multistate/*, allow
+        - p, proj:multistate:releasers, applications, delete, multistate/*, deny
+      groups:
+        - uptimecrew:multistate-engineers-releasers
