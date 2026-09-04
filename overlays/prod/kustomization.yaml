@@ -1,4 +1,4 @@
-# uptimecrew/multistate-config/overlays/dev/kustomization.yaml
+# uptimecrew/multistate-config/overlays/prod/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -6,7 +6,7 @@ resources:
   - ../../base
   - namespace.yaml
 
-namespace: multistate-dev
+namespace: multistate-prod
 
 commonAnnotations:
   argocd.argoproj.io/sync-wave: "0"
@@ -18,7 +18,7 @@ images:
 
 replicas:
   - name: multistate-api
-    count: 1
+    count: 3
 
 patches:
   - target:
@@ -33,14 +33,21 @@ patches:
     patch: |-
       - op: replace
         path: /data/SPRING_PROFILES_ACTIVE
-        value: docker,dev
+        value: docker,prod
       - op: add
         path: /data/LOG_LEVEL
-        value: DEBUG
+        value: WARN
   - target:
       kind: HorizontalPodAutoscaler
       name: multistate-api
     patch: |-
       - op: replace
         path: /spec/minReplicas
-        value: 1
+        value: 3
+  - target:
+      kind: Ingress
+      name: multistate-api
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: multistate.prod.uptimecrew.internal
