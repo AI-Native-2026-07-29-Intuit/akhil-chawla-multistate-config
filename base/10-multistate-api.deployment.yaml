@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multistate-api
+  namespace: multistate-dev
+  labels:
+    app.kubernetes.io/name: multistate-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: multistate
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  replicas: 3
+  progressDeadlineSeconds: 120
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: multistate-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: multistate-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: multistate
+        app.kubernetes.io/managed-by: kubectl
+      annotations:
+        checksum/config: ed9221de696dafe89505ddfec1b3b6ee460a358112438b348e4cc160fb94d7de
+        checksum/secret: 81d8439b6a6b770bd8f7f3ba64444645e27dbfa503b3b9aa858db2fa2d378983
+    spec:
+      terminationGracePeriodSeconds: 30
+      # No anti-control-plane nodeAffinity here: this manifest also targets
+      # single-node dev clusters (rancher-desktop) where the only node IS the
+      # control-plane, so requiring DoesNotExist on that label leaves zero
+      # schedulable nodes. A real multi-node cluster (the k3d setup in
+      # scripts/k8s-up.sh) has dedicated agent nodes and doesn't need this
+      # rule enforced here to avoid landing on the control-plane anyway.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      containers:
+        - name: multistate-api
+          image: uptimecrew/multistate-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: multistate-api-config
+            - secretRef:
+                name: multistate-api-secrets
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          lifecycle:
+            preStop:
+              # exec sleep, not the native lifecycle.preStop.sleep action: this
+              # cluster's API server is v1.25, and the native sleep action needs
+              # v1.29+ (strict decoding rejects the whole Deployment otherwise).
+              exec:
+                command: ["sleep", "15"]
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
