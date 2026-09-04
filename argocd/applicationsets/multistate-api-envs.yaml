@@ -37,8 +37,9 @@ spec:
     metadata:
       name: multistate-api-{{env}}
       namespace: argocd
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
+      # Do NOT set resources-finalizer here. preserveResourcesOnDeletion: true
+      # above tells the ApplicationSet controller to omit that finalizer so an
+      # env dropped from the matrix keeps its Application + cluster resources.
       annotations:
         argocd.argoproj.io/sync-wave: "{{wave}}"
       labels:
