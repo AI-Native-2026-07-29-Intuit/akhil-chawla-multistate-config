@@ -1,10 +1,9 @@
 # argocd-system/notifications-cm.yaml
-# Wires argocd-notifications-controller to Slack. The webhook URL
-# is held in the argocd-notifications-secret (kubectl create secret
-# generic argocd-notifications-secret --from-literal=slack-token=...);
-# this ConfigMap declares only the triggers, templates, and the
-# named service that points at the secret. Engineers do NOT commit
-# the secret to Git — it is created out-of-band by the platform team.
+# Wires argocd-notifications-controller to Slack. The Bot OAuth token
+# (xoxb-...) is held in argocd-notifications-secret:
+#   kubectl create secret generic argocd-notifications-secret \
+#     --from-literal=slack-token="$SLACK_BOT_TOKEN" -n argocd
+# Never commit the token to Git.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,9 +14,9 @@ data:
     token: $slack-token
 
   trigger.on-sync-failed: |
-    - description: Application sync failed.
+    - description: Application sync failed or manifest generation failed.
       send:    [app-sync-failed]
-      when:    app.status.operationState.phase in ['Error', 'Failed']
+      when:    (app.status.operationState != nil && app.status.operationState.phase in ['Error', 'Failed']) || (app.status.conditions != nil && len(app.status.conditions) > 0 && app.status.conditions[0].type == 'ComparisonError')
 
   trigger.on-health-degraded: |
     - description: Application health degraded.
@@ -26,20 +25,17 @@ data:
 
   template.app-sync-failed: |
     message: |
-      {{.app.metadata.name}} sync FAILED at {{.app.status.operationState.finishedAt}}.
+      {{.app.metadata.name}} sync FAILED.
       Project:   {{.app.spec.project}}
-      Revision:  {{.app.status.operationState.syncResult.revision}}
-      Phase:     {{.app.status.operationState.phase}}
-      Message:   {{.app.status.operationState.message}}
-      View:      https://argocd.uptimecrew.example.internal/applications/{{.app.metadata.name}}
+      Sync:      {{.app.status.sync.status}}
     slack:
       attachments: |
         [{
           "title":   "{{.app.metadata.name}} sync failed",
           "color":   "#E96D76",
           "fields":  [
-            {"title": "Project",  "value": "{{.app.spec.project}}",  "short": true},
-            {"title": "Revision", "value": "{{.app.status.operationState.syncResult.revision}}", "short": true}
+            {"title": "Project",     "value": "{{.app.spec.project}}",           "short": true},
+            {"title": "Sync Status", "value": "{{.app.status.sync.status}}",     "short": true}
           ]
         }]
 
@@ -49,7 +45,6 @@ data:
       Project:   {{.app.spec.project}}
       Status:    {{.app.status.health.status}}
       Message:   {{.app.status.health.message}}
-      View:      https://argocd.uptimecrew.example.internal/applications/{{.app.metadata.name}}
     slack:
       attachments: |
         [{
@@ -62,6 +57,6 @@ data:
         }]
 
   subscriptions: |
-    - recipients: [slack:multistate-deploys]
+    - recipients: [slack:multi-state-deploys-akhil-chawla]
       triggers:   [on-sync-failed, on-health-degraded]
       selector:   team=multistate
