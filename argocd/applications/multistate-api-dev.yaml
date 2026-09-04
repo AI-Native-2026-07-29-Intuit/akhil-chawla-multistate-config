@@ -1,3 +1,6 @@
+# Superseded by argocd/applicationsets/multistate-api-envs.yaml (Task 3).
+# Kept as a readable dev Application anchor; the ApplicationSet generates
+# multistate-api-dev at runtime with the same spec shape.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
