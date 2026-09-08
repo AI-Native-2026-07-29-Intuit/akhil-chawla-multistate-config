@@ -1,0 +1,40 @@
+# uptimecrew/multistate-config/overlays/dev/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+namespace: multistate-dev
+
+components:
+  - ../components/workload-sync-wave
+
+images:
+  - name: uptimecrew/multistate-api
+    newName: uptimecrew/multistate-api
+    newTag: "0.1.0"
+
+replicas:
+  - name: multistate-api
+    count: 1
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: multistate-api-config
+    patch: |-
+      - op: replace
+        path: /data/SPRING_PROFILES_ACTIVE
+        value: docker,dev
+      - op: add
+        path: /data/LOG_LEVEL
+        value: DEBUG
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: multistate-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1

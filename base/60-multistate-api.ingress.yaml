@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multistate-api
+  namespace: multistate-dev
+  labels:
+    app.kubernetes.io/name: multistate-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: multistate
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: multistate.dev.uptimecrew.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: multistate-api
+                port:
+                  number: 8080
