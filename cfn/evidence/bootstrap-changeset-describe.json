@@ -1,0 +1,36 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Add",
+        "LogicalResourceId": "BootstrapBucket",
+        "ResourceType": "AWS::S3::Bucket"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Add",
+        "LogicalResourceId": "BootstrapBucketPolicy",
+        "ResourceType": "AWS::S3::BucketPolicy"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Add",
+        "LogicalResourceId": "CfnDeployRole",
+        "ResourceType": "AWS::IAM::Role"
+      }
+    }
+  ],
+  "ChangeSetName": "initial",
+  "StackName": "multistate-bootstrap-dev",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "DeploymentTarget": "Floci (http://localhost:4566)",
+  "GitHubOrg": "AI-Native-2026-07-29-Intuit",
+  "GitHubRepo": "akhil-chawla-multistate-config",
+  "Notes": "Captured via aws cloudformation describe-change-set after create-change-set --change-set-type CREATE"
+}
