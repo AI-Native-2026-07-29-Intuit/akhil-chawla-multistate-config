@@ -1,0 +1,17 @@
+# Cross-stack export health check — multistate-network-dev delete attempt
+# Command: aws cloudformation delete-stack --stack-name multistate-network-dev
+# (with multistate-app-dev in CREATE_COMPLETE, importing network exports)
+
+## Expected on real AWS
+ValidationError: Delete canceled. Cannot delete export multistate-network-dev-VpcId
+as it is in use by stack multistate-app-dev.
+
+## Actual on Floci (localhost:4566)
+Delete accepted silently — stack removed without export-in-use guard.
+aws cloudformation describe-stacks --stack-name multistate-network-dev
+→ ValidationError: Stack with id multistate-network-dev does not exist
+
+## Blocker
+Floci does not enforce CloudFormation export dependency protection.
+Re-run this test against real AWS (or a CFN emulator that implements export
+locking) for PR evidence. Template and ImportValue wiring are correct.

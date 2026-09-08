@@ -1,0 +1,46 @@
+{
+    "Changes": [
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "MultistateArtifactsBucket",
+                "ResourceType": "AWS::S3::Bucket",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "ArtefactBucketPolicy",
+                "ResourceType": "AWS::S3::BucketPolicy",
+                "Scope": [],
+                "Details": []
+            }
+        }
+    ],
+    "ChangeSetName": "initial",
+    "ChangeSetId": "arn:aws:cloudformation:us-east-1:000000000000:changeSet/initial/1054ff24-7ffc-4f3c-88a1-943547598cc9",
+    "StackId": "arn:aws:cloudformation:us-east-1:000000000000:stack/multistate-artifacts-dev/54cf1f7b-fa05-44bf-9f9d-e62e1306aa13",
+    "StackName": "multistate-artifacts-dev",
+    "Description": null,
+    "Parameters": null,
+    "CreationTime": "2026-09-08T18:20:06.153310+00:00",
+    "ExecutionStatus": "AVAILABLE",
+    "Status": "CREATE_COMPLETE",
+    "StatusReason": null,
+    "NotificationARNs": null,
+    "RollbackConfiguration": null,
+    "Capabilities": null,
+    "Tags": null,
+    "ParentChangeSetId": null,
+    "IncludeNestedStacks": null,
+    "RootChangeSetId": null,
+    "OnStackFailure": null,
+    "ImportExistingResources": null,
+    "StackDriftStatus": null,
+    "DeploymentMode": null,
+    "DeploymentConfig": null
+}

@@ -1,0 +1,89 @@
+# cfn/multistate-artifacts-dev.yaml
+# TASK 3 S3 artefact bucket — holds SAM artefacts and Argo CD config
+# snapshots. Hardened defaults from day one. Both DeletionPolicy: Retain
+# AND UpdateReplacePolicy: Retain so stack delete / replacement never
+# destroys live data.
+#
+# Deploy with the ChangeSet flow:
+#   aws cloudformation create-change-set \
+#     --stack-name multistate-artifacts-dev \
+#     --change-set-name initial --change-set-type CREATE \
+#     --template-body file://cfn/multistate-artifacts-dev.yaml \
+#     --parameters ParameterKey=EnvName,ParameterValue=dev \
+#     --region us-east-1
+AWSTemplateFormatVersion: "2010-09-09"
+Description: multistate artefact bucket -- KMS, PAB, lifecycle, deny-non-TLS.
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment label.
+
+Resources:
+  MultistateArtifactsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: uptimecrew-multistate-artifacts-dev
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: alias/aws/s3
+            BucketKeyEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls:       true
+        BlockPublicPolicy:     true
+        IgnorePublicAcls:      true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: tier-storage
+            Status: Enabled
+            Transitions:
+              - StorageClass: STANDARD_IA
+                TransitionInDays: 90
+              - StorageClass: GLACIER_IR
+                TransitionInDays: 365
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      Tags:
+        - {Key: Env,     Value: !Ref EnvName}
+        - {Key: Project, Value: multistate}
+
+  ArtefactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MultistateArtifactsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyNonTLS
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt MultistateArtifactsBucket.Arn
+              - !Sub "${MultistateArtifactsBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"
+
+Outputs:
+  ArtefactBucketName:
+    Description: Hardened artefact bucket name.
+    Value: !Ref MultistateArtifactsBucket
+    Export: {Name: !Sub "${AWS::StackName}-BucketName"}
+  ArtefactBucketArn:
+    Description: Hardened artefact bucket ARN.
+    Value: !GetAtt MultistateArtifactsBucket.Arn
+    Export: {Name: !Sub "${AWS::StackName}-BucketArn"}
