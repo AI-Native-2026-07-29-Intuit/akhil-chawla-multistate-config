@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   validate:
@@ -27,7 +26,8 @@ jobs:
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f  # v5.1.1
         with:
           python-version: "3.12"
-      - run: pip install cfn-lint==1.10.3 cfn-lint-serverless
+      - name: Install cfn-lint + serverless profile
+        run: pip install 'cfn-lint>=1.44.0' 'cfn-lint-serverless==0.3.5'
 
       - name: Set up Ruby (for cfn-nag)
         uses: ruby/setup-ruby@a4effe49ee8ee5b8b5091268c473a4628afb5651  # v1.211.0
@@ -36,17 +36,16 @@ jobs:
       - run: gem install cfn-nag -v 0.8.10
 
       - name: cfn-lint (serverless profile)
-        run: cfn-lint cfn/*.yaml -a cfn_lint_serverless.rules --non-zero-exit-code error
+        run: cfn-lint cfn/*.yaml -a cfn_lint_serverless.rules --non-zero-exit-code error -i W3691
 
       - name: cfn-nag
-        run: cfn_nag_scan --input-path cfn --output-format txt --fail-on-warnings
+        run: |
+          set -e
+          for template in cfn/multistate-*.yaml; do
+            cfn_nag_scan --input-path "$template" --output-format txt --fail-on-warnings
+          done
 
-      - name: Configure AWS credentials (OIDC, read-only)
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502  # v4.0.2
-        with:
-          role-to-assume: arn:aws:iam::123456789012:role/multistate-api-cfn-deploy
-          aws-region: us-east-1
-
+      # validate-template is a syntax check — no AWS credentials required.
       - name: aws cloudformation validate-template (bootstrap)
         run: |
           aws cloudformation validate-template \

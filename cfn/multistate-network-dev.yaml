@@ -48,6 +48,11 @@ Conditions:
 Resources:
   Vpc:
     Type: AWS::EC2::VPC
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W60
+            reason: VPC flow logs out of scope for W6 D3 network stack.
     Properties:
       CidrBlock:           !Ref VpcCidr
       EnableDnsSupport:    true
@@ -73,6 +78,11 @@ Resources:
   # --- Public subnets (3): IGW-routed, host the NAT GW(s).
   PublicSubnetA:
     Type: AWS::EC2::Subnet
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W33
+            reason: Public subnets require MapPublicIpOnLaunch for NAT GW / IGW routing.
     Properties:
       VpcId:               !Ref Vpc
       AvailabilityZone:    !Select [0, !GetAZs ""]
@@ -82,6 +92,11 @@ Resources:
         - {Key: Name, Value: !Sub "multistate-${EnvName}-public-a"}
   PublicSubnetB:
     Type: AWS::EC2::Subnet
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W33
+            reason: Public subnets require MapPublicIpOnLaunch for NAT GW / IGW routing.
     Properties:
       VpcId:               !Ref Vpc
       AvailabilityZone:    !Select [1, !GetAZs ""]
@@ -91,6 +106,11 @@ Resources:
         - {Key: Name, Value: !Sub "multistate-${EnvName}-public-b"}
   PublicSubnetC:
     Type: AWS::EC2::Subnet
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W33
+            reason: Public subnets require MapPublicIpOnLaunch for NAT GW / IGW routing.
     Properties:
       VpcId:               !Ref Vpc
       AvailabilityZone:    !Select [2, !GetAZs ""]
@@ -280,6 +300,13 @@ Resources:
   # NO 0.0.0.0/0 ingress.
   MultistateAppSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Stable SG name for cross-stack ImportValue references.
+          - id: W5
+            reason: HTTPS egress to 0.0.0.0/0 required for ECR, STS, Secrets Manager.
     Properties:
       GroupName:        !Sub "multistate-${EnvName}-app-sg"
       GroupDescription: App SG; ingress 8080 from VPC; egress 443 (+5432 to DB SG in Task 3).

@@ -50,6 +50,11 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W35
+            reason: S3 access logging out of scope for W6 D3 capstone buckets.
     Properties:
       # Synthetic globally-unique name. AWS::AccountId disambiguates
       # across cohorts running the same stack in different accounts.
@@ -105,6 +110,11 @@ Resources:
   # repo's main branch + PR workflow. NEVER a wildcard sub claim.
   CfnDeployRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Stable role name required for GitHub Actions OIDC role-to-assume.
     Properties:
       RoleName: multistate-api-cfn-deploy
       AssumeRolePolicyDocument:

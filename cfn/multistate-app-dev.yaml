@@ -80,6 +80,11 @@ Resources:
             Fn::ImportValue:
               Fn::Sub: "${NetworkStackName}-AppSgId"
           Description: Postgres from app SG only.
+      # Explicit egress (cfn-nag F1000); RDS does not initiate outbound connections.
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 127.0.0.1/32
+          Description: No outbound; RDS is ingress-only.
       Tags:
         - {Key: Name, Value: !Sub "multistate-${EnvName}-db-sg"}
 
@@ -101,6 +106,11 @@ Resources:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Stable DB identifier required for Secrets Manager attachment.
     Properties:
       DBInstanceIdentifier:  !Sub "multistate-${EnvName}"
       Engine:                postgres

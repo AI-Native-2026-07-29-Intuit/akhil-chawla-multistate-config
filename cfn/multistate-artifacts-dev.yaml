@@ -26,6 +26,11 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W35
+            reason: S3 access logging out of scope for W6 D3 capstone buckets.
     Properties:
       BucketName: uptimecrew-multistate-artifacts-dev
       VersioningConfiguration:
