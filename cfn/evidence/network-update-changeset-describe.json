@@ -1,0 +1,38 @@
+{
+    "Changes": [
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Modify",
+                "LogicalResourceId": "Vpc",
+                "PhysicalResourceId": "vpc-78a7c870",
+                "ResourceType": "AWS::EC2::VPC",
+                "Replacement": "False",
+                "Scope": [],
+                "Details": []
+            }
+        }
+    ],
+    "ChangeSetName": "task4-tag-update",
+    "ChangeSetId": "arn:aws:cloudformation:us-east-1:000000000000:changeSet/task4-tag-update/bc3f56ab-8ecd-4212-bc75-f48e9f373083",
+    "StackId": "arn:aws:cloudformation:us-east-1:000000000000:stack/multistate-network-dev/64c374b0-d582-479d-a3a8-c4aad8c20aa2",
+    "StackName": "multistate-network-dev",
+    "Description": null,
+    "Parameters": null,
+    "CreationTime": "2026-09-08T18:28:42.786566+00:00",
+    "ExecutionStatus": "AVAILABLE",
+    "Status": "CREATE_COMPLETE",
+    "StatusReason": null,
+    "NotificationARNs": null,
+    "RollbackConfiguration": null,
+    "Capabilities": null,
+    "Tags": null,
+    "ParentChangeSetId": null,
+    "IncludeNestedStacks": null,
+    "RootChangeSetId": null,
+    "OnStackFailure": null,
+    "ImportExistingResources": null,
+    "StackDriftStatus": null,
+    "DeploymentMode": null,
+    "DeploymentConfig": null
+}

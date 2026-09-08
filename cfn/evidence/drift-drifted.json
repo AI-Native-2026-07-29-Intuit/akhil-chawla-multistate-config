@@ -1,0 +1,29 @@
+# Floci blocker: detect-stack-drift not supported
+# Action DetectStackDrift returns UnknownAction on Floci 2.0.1
+#
+# Re-run on real AWS after adding tag via console/CLI:
+#   aws s3api put-bucket-tagging --bucket uptimecrew-multistate-artifacts-dev \
+#     --tagging 'TagSet=[{Key=DriftTest,Value=manual},{Key=Env,Value=dev},{Key=Project,Value=multistate}]'
+#   aws cloudformation detect-stack-drift --stack-name multistate-artifacts-dev
+#
+# Expected DRIFTED output (paste into PR):
+{
+  "StackId": "arn:aws:cloudformation:us-east-1:ACCOUNT:stack/multistate-artifacts-dev/...",
+  "StackDriftStatus": "DRIFTED",
+  "DetectionStatus": "DETECTION_COMPLETE"
+}
+
+# Expected resource drift (4-6 lines):
+[
+  {
+    "StackResourceDriftStatus": "MODIFIED",
+    "LogicalResourceId": "MultistateArtifactsBucket",
+    "ResourceType": "AWS::S3::Bucket",
+    "PropertyDifferences": [
+      {
+        "PropertyPath": "/Tags/DriftTest",
+        "DifferenceType": "ADD"
+      }
+    ]
+  }
+]

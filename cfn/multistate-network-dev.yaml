@@ -56,6 +56,7 @@ Resources:
         - {Key: Name,    Value: !Sub "multistate-${EnvName}-vpc"}
         - {Key: Env,     Value: !Ref EnvName}
         - {Key: Project, Value: multistate}
+        - {Key: ManagedBy, Value: cloudformation}
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -315,6 +316,9 @@ Outputs:
     Description: Comma-joined public subnet IDs; consumers split with !Split.
     Value: !Join [",", [!Ref PublicSubnetA, !Ref PublicSubnetB, !Ref PublicSubnetC]]
     Export: {Name: !Sub "${AWS::StackName}-PublicSubnets"}
+  AppDesiredReplicas:
+    Description: Scale hint from EnvToReplicas mapping for downstream app sizing.
+    Value: !FindInMap [EnvToReplicas, !Ref EnvName, AppDesired]
   AppSecurityGroupId:
     Description: Application security group ID for workload ENIs.
     Value: !Ref MultistateAppSecurityGroup
