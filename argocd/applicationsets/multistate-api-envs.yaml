@@ -52,7 +52,7 @@ spec:
       source:
         repoURL: https://github.com/AI-Native-2026-07-29-Intuit/akhil-chawla-multistate-config.git
         path: "{{overlay}}"
-        targetRevision: w6d2-implementation
+        targetRevision: main
         kustomize:
           images:
             - uptimecrew/multistate-api:0.1.0
