@@ -1,8 +1,3 @@
-# Floci blocker: drift detection unsupported — expected IN_SYNC after revert on real AWS
-{
-  "StackId": "arn:aws:cloudformation:us-east-1:ACCOUNT:stack/multistate-artifacts-dev/...",
-  "StackDriftStatus": "IN_SYNC",
-  "DetectionStatus": "DETECTION_COMPLETE"
-}
-
-# Revert: remove DriftTest tag or re-execute ChangeSet with original template, then re-run detect-stack-drift.
+# Drift detection — not run (Floci does not support DetectStackDrift).
+# On real AWS, after reverting the manual change, drift detection would
+# report StackDriftStatus: IN_SYNC.
