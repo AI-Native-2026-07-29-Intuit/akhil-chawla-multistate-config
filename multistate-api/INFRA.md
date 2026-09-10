@@ -87,16 +87,23 @@ aws cloudformation describe-stack-resource-drifts \
 
 Revert the manual change (remove tag or re-apply template via ChangeSet) and re-run drift detection until `StackDriftStatus` is `IN_SYNC`.
 
-Evidence captured under `cfn/evidence/drift-*.txt`.
+**Floci / no-AWS note:** `DetectStackDrift` is not supported on Floci (`UnknownAction`), so no drift output was captured. On real AWS, after an out-of-band tag on the artefacts bucket, drift status would read `DRIFTED` with `MultistateArtifactsBucket` flagged `MODIFIED`; reverting the change would return `IN_SYNC`.
 
-## Floci (local emulator) limitations
+## Floci / no-AWS limitations by criterion
 
-When using Floci instead of real AWS:
+No real AWS account was used. Templates were validated via CI (`cfn-lint`, `cfn-nag`, `validate-template` against LocalStack). Stacks were deployed on Floci where live verification was possible.
 
-- S3 PAB and bucket policies may not persist to the S3 API even when CFN reports `CREATE_COMPLETE`.
-- CloudFormation export-in-use delete protection is not enforced.
-- `Fn::Split` + `Fn::ImportValue` on `SubnetIds` fails; use `Fn::Select` [0,1,2] over the same split (template includes this workaround; real AWS accepts both forms).
-- Drift detection support varies — re-run against real AWS for grading evidence if Floci returns incomplete results.
+| Criterion | Verified on Floci / in repo | Requires real AWS |
+|-----------|----------------------------|-------------------|
+| **T1** Bootstrap | `multistate-bootstrap-dev` `CREATE_COMPLETE`; ChangeSet JSON; IAM trust `StringEquals` aud + `StringLike` sub; 12 CFN actions in template | S3 API checks (`get-public-access-block`, encryption, lifecycle, bucket policy) — Floci does not persist PAB/policy/lifecycle to the S3 API even when CFN reports `CREATE_COMPLETE` |
+| **T2** Network | `multistate-network-dev` `CREATE_COMPLETE` / `UPDATE_COMPLETE`; 6 subnets; `IsProdLike` gates NAT; exports present; app SG ingress from VPC CIDR only | None |
+| **T3** App + S3 | `multistate-app-dev` + `multistate-artifacts-dev` `CREATE_COMPLETE`; `!ImportValue` wiring; SM dynamic ref (no `NoEcho`); Retain pair + lifecycle in template | S3 PAB/policy API on artefacts bucket; **export-in-use delete guard** — on real AWS, deleting `multistate-network-dev` while `multistate-app-dev` imports its exports would fail with a `ValidationError` naming the export in use; Floci allows the delete |
+| **T4** CI + drift | `cfn-validate.yml` green; required status check on `main`; UPDATE ChangeSet `Replacement: False`; cfn-author audit in this file | **Drift detection** — Floci does not implement `DetectStackDrift`; on real AWS, an out-of-band bucket tag would yield `DRIFTED`, then `IN_SYNC` after revert |
+| **Hygiene** | Branch `w6d3-implementation`; annotated YAML; this document | None |
+
+**Template workaround:** `Fn::Split` + `Fn::ImportValue` on `SubnetIds` fails on Floci; the app template uses `Fn::Select` [0,1,2] over the same split (valid on real AWS as well).
+
+**CI note:** GitHub Actions runs `validate-template` against a LocalStack sidecar because no AWS credentials are available in CI.
 
 ## cfn-author Skill audit notes
 
@@ -115,7 +122,7 @@ Compared `/cfn-author multistate --region us-east-1` output against the four aut
 `.github/workflows/cfn-validate.yml` runs on every PR touching `cfn/`:
 
 - `cfn-lint cfn/*.yaml -a cfn_lint_serverless.rules` (serverless profile)
-- `cfn_nag_scan --input-path cfn --fail-on-warnings`
+- `cfn_nag_scan --input-path cfn/multistate-*.yaml` (one scan per template, `--fail-on-warnings`)
 - `aws cloudformation validate-template` for all four templates
 
 Mark **cfn-validate** as a required status check on `main` in GitHub branch protection.
