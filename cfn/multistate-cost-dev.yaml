@@ -109,6 +109,11 @@ Resources:
   # (contrast a metric-pipeline alarm, where silence = breaching).
   EstimatedChargesAlarm:
     Type: AWS::CloudWatch::Alarm
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: AlarmName multistate/estimated-charges-dev is intentional for ops grep; replacement on rename is acceptable in dev.
     Properties:
       AlarmName: multistate/estimated-charges-dev
       AlarmDescription: !Sub "Account-wide EstimatedCharges > ${BillingAlarmUsd} USD."
