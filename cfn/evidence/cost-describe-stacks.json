@@ -1,0 +1,35 @@
+{
+    "Stacks": [
+        {
+            "StackId": "arn:aws:cloudformation:us-east-1:000000000000:stack/multistate-cost-dev/2ef6b781-b47e-4e79-81c8-a221132e8734",
+            "StackName": "multistate-cost-dev",
+            "Parameters": [
+                {
+                    "ParameterKey": "MonthlyBudgetUsd",
+                    "ParameterValue": "100"
+                },
+                {
+                    "ParameterKey": "EnvName",
+                    "ParameterValue": "dev"
+                },
+                {
+                    "ParameterKey": "BillingAlarmUsd",
+                    "ParameterValue": "120"
+                }
+            ],
+            "CreationTime": "2026-09-10T18:24:50.472712+00:00",
+            "LastUpdatedTime": "2026-09-10T18:25:11.891855+00:00",
+            "StackStatus": "CREATE_COMPLETE",
+            "Capabilities": [],
+            "Outputs": [
+                {
+                    "OutputKey": "CostAlarmsTopicArn",
+                    "OutputValue": "arn:aws:sns:us-east-1:000000000000:multistate-cost-alarms-dev",
+                    "ExportName": "multistate-cost-dev-CostAlarmsTopicArn"
+                }
+            ],
+            "Tags": [],
+            "EnableTerminationProtection": false
+        }
+    ]
+}

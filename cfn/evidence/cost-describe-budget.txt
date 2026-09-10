@@ -1,0 +1,9 @@
+# describe-budget — Floci gap
+# Floci returns UnknownOperationException for AWSBudgetServiceGateway.DescribeBudget.
+# On real AWS, expected output:
+#   BudgetName: multistate-monthly-cost-dev
+#   BudgetLimit: { Amount: 100, Unit: USD }
+#   NotificationsWithSubscribers: FORECASTED > 80%, ACTUAL > 100% → SNS
+
+
+aws: [ERROR]: An error occurred (UnknownOperationException) when calling the DescribeBudget operation: Unknown operation: AWSBudgetServiceGateway.DescribeBudget

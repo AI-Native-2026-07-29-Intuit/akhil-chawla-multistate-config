@@ -1,0 +1,7 @@
+# get-resources --tag-filters Key=service,Values=multistate
+# Floci: ResourceTagMappingList empty — tags not persisted to tagging API on NAT/RDS.
+# On real AWS, NAT gateway(s) and RDS multistate-dev would appear.
+
+{
+    "ResourceTagMappingList": []
+}
