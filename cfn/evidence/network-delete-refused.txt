@@ -1,0 +1,9 @@
+# Network delete refused — not run on real AWS.
+#
+# With multistate-app-dev in CREATE_COMPLETE and importing network exports,
+# real AWS would refuse delete-stack on multistate-network-dev with a
+# ValidationError naming the export in use (e.g. multistate-network-dev-VpcId
+# is in use by stack multistate-app-dev).
+#
+# Floci does not enforce export-in-use protection; the delete was accepted
+# locally when attempted. Template ImportValue wiring is correct.

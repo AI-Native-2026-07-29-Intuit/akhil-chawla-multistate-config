@@ -1,0 +1,66 @@
+{
+    "Changes": [
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "DbSubnetGroup",
+                "ResourceType": "AWS::RDS::DBSubnetGroup",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "DbSecurityGroup",
+                "ResourceType": "AWS::EC2::SecurityGroup",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "AppToDbEgress",
+                "ResourceType": "AWS::EC2::SecurityGroupEgress",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "DbInstance",
+                "ResourceType": "AWS::RDS::DBInstance",
+                "Scope": [],
+                "Details": []
+            }
+        }
+    ],
+    "ChangeSetName": "initial-v3",
+    "ChangeSetId": "arn:aws:cloudformation:us-east-1:000000000000:changeSet/initial-v3/cdf48ac9-29e9-4995-83e7-f79dbb4d4a21",
+    "StackId": "arn:aws:cloudformation:us-east-1:000000000000:stack/multistate-app-dev/14f32435-4edc-483d-a5a9-35f06042fd93",
+    "StackName": "multistate-app-dev",
+    "Description": null,
+    "Parameters": null,
+    "CreationTime": "2026-09-08T18:22:34.069270+00:00",
+    "ExecutionStatus": "AVAILABLE",
+    "Status": "CREATE_COMPLETE",
+    "StatusReason": null,
+    "NotificationARNs": null,
+    "RollbackConfiguration": null,
+    "Capabilities": null,
+    "Tags": null,
+    "ParentChangeSetId": null,
+    "IncludeNestedStacks": null,
+    "RootChangeSetId": null,
+    "OnStackFailure": null,
+    "ImportExistingResources": null,
+    "StackDriftStatus": null,
+    "DeploymentMode": null,
+    "DeploymentConfig": null
+}

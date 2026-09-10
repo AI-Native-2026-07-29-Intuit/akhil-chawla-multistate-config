@@ -1,0 +1,246 @@
+{
+    "Changes": [
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "Vpc",
+                "ResourceType": "AWS::EC2::VPC",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "InternetGateway",
+                "ResourceType": "AWS::EC2::InternetGateway",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "IgwAttachment",
+                "ResourceType": "AWS::EC2::VPCGatewayAttachment",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicSubnetA",
+                "ResourceType": "AWS::EC2::Subnet",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicSubnetB",
+                "ResourceType": "AWS::EC2::Subnet",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicSubnetC",
+                "ResourceType": "AWS::EC2::Subnet",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateSubnetA",
+                "ResourceType": "AWS::EC2::Subnet",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateSubnetB",
+                "ResourceType": "AWS::EC2::Subnet",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateSubnetC",
+                "ResourceType": "AWS::EC2::Subnet",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "NatEipA",
+                "ResourceType": "AWS::EC2::EIP",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "NatGatewayA",
+                "ResourceType": "AWS::EC2::NatGateway",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicRouteTable",
+                "ResourceType": "AWS::EC2::RouteTable",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicDefaultRoute",
+                "ResourceType": "AWS::EC2::Route",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicAssocA",
+                "ResourceType": "AWS::EC2::SubnetRouteTableAssociation",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicAssocB",
+                "ResourceType": "AWS::EC2::SubnetRouteTableAssociation",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PublicAssocC",
+                "ResourceType": "AWS::EC2::SubnetRouteTableAssociation",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateRouteTableA",
+                "ResourceType": "AWS::EC2::RouteTable",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateDefaultRouteA",
+                "ResourceType": "AWS::EC2::Route",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateAssocA",
+                "ResourceType": "AWS::EC2::SubnetRouteTableAssociation",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateAssocBDev",
+                "ResourceType": "AWS::EC2::SubnetRouteTableAssociation",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "PrivateAssocCDev",
+                "ResourceType": "AWS::EC2::SubnetRouteTableAssociation",
+                "Scope": [],
+                "Details": []
+            }
+        },
+        {
+            "Type": "Resource",
+            "ResourceChange": {
+                "Action": "Add",
+                "LogicalResourceId": "MultistateAppSecurityGroup",
+                "ResourceType": "AWS::EC2::SecurityGroup",
+                "Scope": [],
+                "Details": []
+            }
+        }
+    ],
+    "ChangeSetName": "initial",
+    "ChangeSetId": "arn:aws:cloudformation:us-east-1:000000000000:changeSet/initial/2693215c-b249-464a-9eba-8fd710b27ec7",
+    "StackId": "arn:aws:cloudformation:us-east-1:000000000000:stack/multistate-network-dev/d3e13c29-723a-47cb-9710-116cc36b4433",
+    "StackName": "multistate-network-dev",
+    "Description": null,
+    "Parameters": null,
+    "CreationTime": "2026-09-08T17:56:45.063881+00:00",
+    "ExecutionStatus": "AVAILABLE",
+    "Status": "CREATE_COMPLETE",
+    "StatusReason": null,
+    "NotificationARNs": null,
+    "RollbackConfiguration": null,
+    "Capabilities": null,
+    "Tags": null,
+    "ParentChangeSetId": null,
+    "IncludeNestedStacks": null,
+    "RootChangeSetId": null,
+    "OnStackFailure": null,
+    "ImportExistingResources": null,
+    "StackDriftStatus": null,
+    "DeploymentMode": null,
+    "DeploymentConfig": null
+}

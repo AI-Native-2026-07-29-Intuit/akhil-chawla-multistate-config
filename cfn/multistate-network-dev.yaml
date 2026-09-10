@@ -1,0 +1,352 @@
+# cfn/multistate-network-dev.yaml
+# TASK 2 network stack: 3-AZ VPC, IGW, public + private subnets
+# (one of each per AZ), per-env NAT GW count gated by Conditions
+# (single NAT in dev; per-AZ NAT in staging/prod), and one
+# application security group. Outputs are EXPORTED for the
+# application stack (Task 3) to consume via !ImportValue.
+#
+# Deploy with the ChangeSet flow:
+#   aws cloudformation create-change-set \
+#     --stack-name multistate-network-dev \
+#     --change-set-name initial --change-set-type CREATE \
+#     --template-body file://cfn/multistate-network-dev.yaml \
+#     --parameters ParameterKey=EnvName,ParameterValue=dev \
+#     --region us-east-1
+#   aws cloudformation describe-change-set ... # review
+#   aws cloudformation execute-change-set ...
+AWSTemplateFormatVersion: "2010-09-09"
+Description: multistate 3-AZ VPC + app SG -- parameterised by env.
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment; gates NAT-GW count.
+  VpcCidr:
+    Type: String
+    Default: 10.43.0.0/16
+    Description: VPC CIDR. Must not overlap any peered network.
+    AllowedPattern: "^10\\.\\d{1,3}\\.0\\.0/16$"
+
+Mappings:
+  # Per-env scale hints, consumed by the application stack via
+  # !FindInMap when it imports the network's VpcCidr.
+  EnvToReplicas:
+    dev:     {AppMin: "1", AppDesired: "1", AppMax: "2"}
+    staging: {AppMin: "2", AppDesired: "2", AppMax: "4"}
+    prod:    {AppMin: "3", AppDesired: "3", AppMax: "6"}
+
+Conditions:
+  # IsDev: dev uses a single shared NAT GW for all private subnets (cost).
+  IsDev: !Equals [!Ref EnvName, dev]
+  # IsProdLike: staging/prod get one NAT GW per AZ for HA egress.
+  IsProdLike: !Or
+    - !Equals [!Ref EnvName, staging]
+    - !Equals [!Ref EnvName, prod]
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W60
+            reason: VPC flow logs out of scope for W6 D3 network stack.
+    Properties:
+      CidrBlock:           !Ref VpcCidr
+      EnableDnsSupport:    true
+      EnableDnsHostnames:  true
+      Tags:
+        - {Key: Name,    Value: !Sub "multistate-${EnvName}-vpc"}
+        - {Key: Env,     Value: !Ref EnvName}
+        - {Key: Project, Value: multistate}
+        - {Key: ManagedBy, Value: cloudformation}
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-igw"}
+
+  IgwAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:             !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  # --- Public subnets (3): IGW-routed, host the NAT GW(s).
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W33
+            reason: Public subnets require MapPublicIpOnLaunch for NAT GW / IGW routing.
+    Properties:
+      VpcId:               !Ref Vpc
+      AvailabilityZone:    !Select [0, !GetAZs ""]
+      CidrBlock:           !Select [0, !Cidr [!Ref VpcCidr, 8, 8]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-public-a"}
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W33
+            reason: Public subnets require MapPublicIpOnLaunch for NAT GW / IGW routing.
+    Properties:
+      VpcId:               !Ref Vpc
+      AvailabilityZone:    !Select [1, !GetAZs ""]
+      CidrBlock:           !Select [1, !Cidr [!Ref VpcCidr, 8, 8]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-public-b"}
+  PublicSubnetC:
+    Type: AWS::EC2::Subnet
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W33
+            reason: Public subnets require MapPublicIpOnLaunch for NAT GW / IGW routing.
+    Properties:
+      VpcId:               !Ref Vpc
+      AvailabilityZone:    !Select [2, !GetAZs ""]
+      CidrBlock:           !Select [2, !Cidr [!Ref VpcCidr, 8, 8]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-public-c"}
+
+  # --- Private subnets (3): NAT-routed, host workloads.
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:            !Ref Vpc
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock:        !Select [3, !Cidr [!Ref VpcCidr, 8, 8]]
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-private-a"}
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:            !Ref Vpc
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock:        !Select [4, !Cidr [!Ref VpcCidr, 8, 8]]
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-private-b"}
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:            !Ref Vpc
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      CidrBlock:        !Select [5, !Cidr [!Ref VpcCidr, 8, 8]]
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-private-c"}
+
+  # --- NAT Gateway: always at least one (A); B and C only in prod-like envs.
+  NatEipA:
+    Type: AWS::EC2::EIP
+    DependsOn: IgwAttachment
+    Properties:
+      Domain: vpc
+      Tags: [{Key: Name, Value: !Sub "multistate-${EnvName}-nat-eip-a"}]
+  NatGatewayA:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEipA.AllocationId
+      SubnetId:     !Ref PublicSubnetA
+      Tags: [{Key: Name, Value: !Sub "multistate-${EnvName}-nat-a"}]
+
+  NatEipBPerAz:
+    Type: AWS::EC2::EIP
+    Condition: IsProdLike
+    DependsOn: IgwAttachment
+    Properties:
+      Domain: vpc
+      Tags: [{Key: Name, Value: !Sub "multistate-${EnvName}-nat-eip-b"}]
+  NatGatewayBPerAz:
+    Type: AWS::EC2::NatGateway
+    Condition: IsProdLike
+    Properties:
+      AllocationId: !GetAtt NatEipBPerAz.AllocationId
+      SubnetId:     !Ref PublicSubnetB
+      Tags: [{Key: Name, Value: !Sub "multistate-${EnvName}-nat-b"}]
+
+  NatEipCPerAz:
+    Type: AWS::EC2::EIP
+    Condition: IsProdLike
+    DependsOn: IgwAttachment
+    Properties:
+      Domain: vpc
+      Tags: [{Key: Name, Value: !Sub "multistate-${EnvName}-nat-eip-c"}]
+  NatGatewayCPerAz:
+    Type: AWS::EC2::NatGateway
+    Condition: IsProdLike
+    Properties:
+      AllocationId: !GetAtt NatEipCPerAz.AllocationId
+      SubnetId:     !Ref PublicSubnetC
+      Tags: [{Key: Name, Value: !Sub "multistate-${EnvName}-nat-c"}]
+
+  # --- Public route table: 0.0.0.0/0 -> IGW. Shared across all 3 AZs.
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-public-rt"}
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IgwAttachment
+    Properties:
+      RouteTableId:         !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:            !Ref InternetGateway
+  PublicAssocA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:     !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+  PublicAssocB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:     !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+  PublicAssocC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:     !Ref PublicSubnetC
+      RouteTableId: !Ref PublicRouteTable
+
+  # --- Private route tables: one per AZ in prod-like (each routes via its
+  # own NAT GW); a single shared table in dev (all 3 AZs route via NAT A).
+  PrivateRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-private-rt-a"}
+  PrivateDefaultRouteA:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:         !Ref PrivateRouteTableA
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:         !Ref NatGatewayA
+  PrivateAssocA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:     !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+
+  PrivateRouteTableB:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProdLike
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-private-rt-b"}
+  PrivateDefaultRouteB:
+    Type: AWS::EC2::Route
+    Condition: IsProdLike
+    Properties:
+      RouteTableId:         !Ref PrivateRouteTableB
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:         !Ref NatGatewayBPerAz
+  PrivateAssocBProdLike:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProdLike
+    Properties:
+      SubnetId:     !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTableB
+  # In dev: route B through the single NAT (A).
+  PrivateAssocBDev:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsDev
+    Properties:
+      SubnetId:     !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTableA
+
+  PrivateRouteTableC:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProdLike
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-private-rt-c"}
+  PrivateDefaultRouteC:
+    Type: AWS::EC2::Route
+    Condition: IsProdLike
+    Properties:
+      RouteTableId:         !Ref PrivateRouteTableC
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:         !Ref NatGatewayCPerAz
+  PrivateAssocCProdLike:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProdLike
+    Properties:
+      SubnetId:     !Ref PrivateSubnetC
+      RouteTableId: !Ref PrivateRouteTableC
+  PrivateAssocCDev:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsDev
+    Properties:
+      SubnetId:     !Ref PrivateSubnetC
+      RouteTableId: !Ref PrivateRouteTableA
+
+  # --- Application security group: ingress 8080 from VPC CIDR only.
+  # Egress 443 to internet here; egress 5432 to the RDS SG is added in
+  # Task 3 (AppToDbEgress) once DbSecurityGroup exists in multistate-app-dev.
+  # NO 0.0.0.0/0 ingress.
+  MultistateAppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Stable SG name for cross-stack ImportValue references.
+          - id: W5
+            reason: HTTPS egress to 0.0.0.0/0 required for ECR, STS, Secrets Manager.
+    Properties:
+      GroupName:        !Sub "multistate-${EnvName}-app-sg"
+      GroupDescription: App SG; ingress 8080 from VPC; egress 443 (+5432 to DB SG in Task 3).
+      VpcId:            !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort:   8080
+          ToPort:     8080
+          CidrIp:     !Ref VpcCidr
+          Description: App port, in-VPC only.
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort:   443
+          ToPort:     443
+          CidrIp:     0.0.0.0/0
+          Description: HTTPS egress (ECR, STS, Secrets Manager).
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-app-sg"}
+
+Outputs:
+  VpcId:
+    Description: VPC identifier exported for cross-stack import.
+    Value: !Ref Vpc
+    Export: {Name: !Sub "${AWS::StackName}-VpcId"}
+  VpcCidr:
+    Description: VPC CIDR block for in-VPC security group rules.
+    Value: !Ref VpcCidr
+    Export: {Name: !Sub "${AWS::StackName}-VpcCidr"}
+  PrivateSubnets:
+    Description: Comma-joined private subnet IDs; consumers split with !Split.
+    Value: !Join [",", [!Ref PrivateSubnetA, !Ref PrivateSubnetB, !Ref PrivateSubnetC]]
+    Export: {Name: !Sub "${AWS::StackName}-PrivateSubnets"}
+  PublicSubnets:
+    Description: Comma-joined public subnet IDs; consumers split with !Split.
+    Value: !Join [",", [!Ref PublicSubnetA, !Ref PublicSubnetB, !Ref PublicSubnetC]]
+    Export: {Name: !Sub "${AWS::StackName}-PublicSubnets"}
+  AppDesiredReplicas:
+    Description: Scale hint from EnvToReplicas mapping for downstream app sizing.
+    Value: !FindInMap [EnvToReplicas, !Ref EnvName, AppDesired]
+  AppSecurityGroupId:
+    Description: Application security group ID for workload ENIs.
+    Value: !Ref MultistateAppSecurityGroup
+    Export: {Name: !Sub "${AWS::StackName}-AppSgId"}

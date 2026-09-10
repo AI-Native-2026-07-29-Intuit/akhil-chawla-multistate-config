@@ -1,0 +1,3 @@
+# Drift detection — not run (Floci does not support DetectStackDrift).
+# On real AWS, after reverting the manual change, drift detection would
+# report StackDriftStatus: IN_SYNC.

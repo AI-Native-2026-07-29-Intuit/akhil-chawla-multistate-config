@@ -1,0 +1,142 @@
+# cfn/multistate-app-dev.yaml
+# TASK 3 application stack: RDS PostgreSQL + DB subnet group + DB SG.
+# Consumes the network stack exports via !ImportValue — never hardcode
+# subnet or security-group IDs. DB master password is resolved at deploy
+# time via Secrets Manager dynamic reference (secret created out-of-band).
+#
+# Prerequisite (one-time per env):
+#   aws secretsmanager create-secret \
+#     --name multistate/dev/db-master \
+#     --secret-string '{"username":"multistate_master","password":"<generated>"}'
+#
+# Deploy with the ChangeSet flow:
+#   aws cloudformation create-change-set \
+#     --stack-name multistate-app-dev \
+#     --change-set-name initial --change-set-type CREATE \
+#     --template-body file://cfn/multistate-app-dev.yaml \
+#     --parameters ParameterKey=EnvName,ParameterValue=dev \
+#     --region us-east-1
+AWSTemplateFormatVersion: "2010-09-09"
+Description: multistate application stack -- RDS consuming network exports.
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment label.
+  NetworkStackName:
+    Type: String
+    Default: multistate-network-dev
+    Description: Name of the network stack whose exports we !ImportValue.
+  DbInstanceClass:
+    Type: String
+    Default: db.t4g.small
+    AllowedValues: [db.t4g.small, db.t4g.medium, db.m6g.large]
+    Description: RDS instance class for the Postgres database.
+
+Resources:
+  # --- DB subnet group spanning private subnets imported from network stack.
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: !Sub "multistate ${EnvName} private subnets"
+      SubnetIds:
+        - Fn::Select:
+            - 0
+            - Fn::Split:
+                - ","
+                - Fn::ImportValue:
+                    Fn::Sub: "${NetworkStackName}-PrivateSubnets"
+        - Fn::Select:
+            - 1
+            - Fn::Split:
+                - ","
+                - Fn::ImportValue:
+                    Fn::Sub: "${NetworkStackName}-PrivateSubnets"
+        - Fn::Select:
+            - 2
+            - Fn::Split:
+                - ","
+                - Fn::ImportValue:
+                    Fn::Sub: "${NetworkStackName}-PrivateSubnets"
+      Tags:
+        - {Key: Env,     Value: !Ref EnvName}
+        - {Key: Project, Value: multistate}
+
+  # --- DB security group: ingress 5432 only from the app SG (imported).
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "multistate ${EnvName} DB SG (5432 from app SG only)."
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: "${NetworkStackName}-VpcId"
+      SecurityGroupIngress:
+        - IpProtocol:             tcp
+          FromPort:               5432
+          ToPort:                 5432
+          SourceSecurityGroupId:
+            Fn::ImportValue:
+              Fn::Sub: "${NetworkStackName}-AppSgId"
+          Description: Postgres from app SG only.
+      # Explicit egress (cfn-nag F1000); RDS does not initiate outbound connections.
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 127.0.0.1/32
+          Description: No outbound; RDS is ingress-only.
+      Tags:
+        - {Key: Name, Value: !Sub "multistate-${EnvName}-db-sg"}
+
+  # --- App SG egress to DB SG (5432); completes cross-stack SG wiring from Task 2.
+  AppToDbEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Fn::ImportValue:
+          Fn::Sub: "${NetworkStackName}-AppSgId"
+      IpProtocol:                tcp
+      FromPort:                  5432
+      ToPort:                    5432
+      DestinationSecurityGroupId: !Ref DbSecurityGroup
+      Description: Postgres egress to RDS SG.
+
+  # --- RDS instance. Credentials from out-of-band Secrets Manager secret.
+  DbInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Stable DB identifier required for Secrets Manager attachment.
+    Properties:
+      DBInstanceIdentifier:  !Sub "multistate-${EnvName}"
+      Engine:                postgres
+      EngineVersion:         "17.2"
+      DBInstanceClass:       !Ref DbInstanceClass
+      AllocatedStorage:      "20"
+      StorageType:           gp3
+      StorageEncrypted:      true
+      DBSubnetGroupName:     !Ref DbSubnetGroup
+      VPCSecurityGroups:     [!Ref DbSecurityGroup]
+      PubliclyAccessible:    false
+      MultiAZ:               false
+      BackupRetentionPeriod: 7
+      DeletionProtection:    true
+      MasterUsername: "{{resolve:secretsmanager:multistate/dev/db-master:SecretString:username}}"
+      MasterUserPassword: "{{resolve:secretsmanager:multistate/dev/db-master:SecretString:password}}"
+      Tags:
+        - {Key: Env,     Value: !Ref EnvName}
+        - {Key: Project, Value: multistate}
+
+Outputs:
+  DbEndpoint:
+    Description: RDS hostname for application connection strings.
+    Value: !GetAtt DbInstance.Endpoint.Address
+    Export: {Name: !Sub "${AWS::StackName}-DbEndpoint"}
+  DbSecurityGroupId:
+    Description: RDS security group ID.
+    Value: !Ref DbSecurityGroup
+    Export: {Name: !Sub "${AWS::StackName}-DbSgId"}
