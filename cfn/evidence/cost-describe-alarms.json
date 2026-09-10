@@ -27,8 +27,7 @@
             "Period": 21600,
             "EvaluationPeriods": 1,
             "Threshold": 120.0,
-            "ComparisonOperator": "GreaterThanThreshold",
-            "TreatMissingData": "ignore"
+            "ComparisonOperator": "GreaterThanThreshold"
         }
     ]
 }
