@@ -1,0 +1,21 @@
+# Cost Explorer saved report — evidence note (W6 D4 T4a)
+#
+# Real AWS steps (paste screenshot or saved-report link in gitops PR):
+#   1. Billing console → Cost allocation tags → activate service, env, tenant, feature
+#   2. Wait ~24h for tags to appear in Cost Explorer
+#   3. Cost Explorer → Group by: Tag → service (cost allocation)
+#   4. Filter Service = EC2-Other
+#   5. Locate usage types *-NatGateway-Hours and *-NatGateway-Bytes under multistate
+#   6. Confirm dev shows ~1 NAT (~$32/mo hourly) not 3 (~$96/mo) — IsDev in network stack
+#   7. Save report as e.g. "multistate-dev-by-service-nat"
+#
+# Floci / no-AWS: Cost Explorer and tag activation APIs are not available.
+# Pass signal on real AWS: saved report + NAT line item visible under service=multistate.
+#
+# Template confirmation (NAT count lever):
+#   cfn/multistate-network-dev.yaml
+#     IsDev: single NatGatewayA routes all private subnets in dev
+#     IsProdLike: NatGatewayA + NatGatewayBPerAz + NatGatewayCPerAz (one per AZ)
+#
+# Tag confirmation (cost allocation):
+#   NatGatewayA/B/C + DbInstance carry service/env/tenant/feature (see cost-tag-resources.txt)
