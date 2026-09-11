@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ../../base
   - namespace.yaml
+  - ../../k8s/multistate-api
 
 namespace: multistate-dev
 
