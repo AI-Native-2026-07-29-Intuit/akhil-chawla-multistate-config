@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ../../base
   - namespace.yaml
+  - ../../k8s/multistate-api
 
 namespace: multistate-staging
 
@@ -33,7 +34,7 @@ patches:
         value: INFO
   - target:
       kind: HorizontalPodAutoscaler
-      name: multistate-api
+      name: multistate-api-hpa
     patch: |-
       - op: replace
         path: /spec/minReplicas

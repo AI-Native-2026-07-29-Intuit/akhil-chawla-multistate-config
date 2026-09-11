@@ -1,0 +1,49 @@
+# k8s/multistate-api/multistate-worker.deployment.yaml
+# TASK 1: the KEDA scale target. Same image as multistate-api, run in
+# the `worker` profile: consumes tenants.events, re-projects the
+# Mongo read model, serves no HTTP. Starts at 0 replicas -- KEDA
+# owns the count from here (do NOT set replicas in the manifest
+# AND run a scaler; that is a sync war -- see the HPA note below).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multistate-api-worker
+  namespace: multistate-dev
+  labels:
+    app: multistate-api-worker
+    app.kubernetes.io/name: multistate-api-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: multistate
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: multistate-api-worker
+  template:
+    metadata:
+      labels:
+        app: multistate-api-worker
+        app.kubernetes.io/name: multistate-api-worker
+    spec:
+      containers:
+        - name: worker
+          image: uptimecrew/multistate-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: docker,worker
+            - name: SPRING_MAIN_WEB_APPLICATION_TYPE
+              value: none
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka.multistate-dev.svc.cluster.local:9092
+            - name: MONGO_HOST
+              value: mongo-dev.multistate-dev.svc.cluster.local
+            - name: OTEL_SDK_DISABLED
+              value: "true"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
