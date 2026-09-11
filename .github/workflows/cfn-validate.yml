@@ -1,13 +1,14 @@
 # .github/workflows/cfn-validate.yml
-# TASK 4 CI gate: every PR that touches cfn/ runs cfn-lint (serverless
-# profile), cfn-nag (--fail-on-warnings), and aws cloudformation
-# validate-template against all five stack templates (incl. cost stack).
+# TASK 4 CI gate: every PR that touches cfn/ or k8s/aws-authored/cfn/
+# runs cfn-lint (serverless profile), cfn-nag (--fail-on-warnings), and
+# aws cloudformation validate-template against all stack templates.
 name: cfn-validate
 
 on:
   pull_request:
     paths:
       - "cfn/**"
+      - "k8s/aws-authored/**"
       - ".github/workflows/cfn-validate.yml"
 
 permissions:
@@ -16,7 +17,8 @@ permissions:
 jobs:
   validate:
     name: cfn-lint + cfn-nag + aws validate-template
-    runs-on: ubuntu-24.04
+    # Blacksmith-hosted runner — org GitHub-hosted runners hit billing limits.
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     timeout-minutes: 10
 
     # validate-template calls the CFN API; LocalStack substitutes for real AWS.
@@ -57,19 +59,22 @@ jobs:
       - run: gem install cfn-nag -v 0.8.10
 
       - name: cfn-lint (serverless profile)
-        run: cfn-lint cfn/*.yaml -a cfn_lint_serverless.rules --non-zero-exit-code error -i W3691
+        run: |
+          set -e
+          cfn-lint cfn/*.yaml -a cfn_lint_serverless.rules --non-zero-exit-code error -i W3691
+          cfn-lint k8s/aws-authored/cfn/*.yaml --non-zero-exit-code error
 
       - name: cfn-nag
         run: |
           set -e
-          for template in cfn/multistate-*.yaml; do
+          for template in cfn/multistate-*.yaml k8s/aws-authored/cfn/*.yaml; do
             cfn_nag_scan --input-path "$template" --output-format txt --fail-on-warnings
           done
 
       - name: aws cloudformation validate-template (all stacks)
         run: |
           set -e
-          for template in cfn/multistate-*.yaml; do
+          for template in cfn/multistate-*.yaml k8s/aws-authored/cfn/*.yaml; do
             echo "Validating ${template}"
             aws cloudformation validate-template \
               --template-body "file://${template}" \
