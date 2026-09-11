@@ -17,10 +17,6 @@ images:
     newName: uptimecrew/multistate-api
     newTag: "0.1.0"
 
-replicas:
-  - name: multistate-api
-    count: 1
-
 patches:
   - target:
       kind: ConfigMap
@@ -32,10 +28,3 @@ patches:
       - op: add
         path: /data/LOG_LEVEL
         value: DEBUG
-  - target:
-      kind: HorizontalPodAutoscaler
-      name: multistate-api
-    patch: |-
-      - op: replace
-        path: /spec/minReplicas
-        value: 1

@@ -5,5 +5,4 @@ resources:
   - 20-multistate-api.service.yaml
   - 30-multistate-api.configmap.yaml
   - 40-multistate-api.secret.yaml
-  - 50-multistate-api.hpa.yaml
   - 60-multistate-api.ingress.yaml
