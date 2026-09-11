@@ -130,6 +130,10 @@ Resources:
       Tags:
         - {Key: Env,     Value: !Ref EnvName}
         - {Key: Project, Value: multistate}
+        - {Key: service, Value: multistate}
+        - {Key: env,     Value: !Ref EnvName}
+        - {Key: tenant,  Value: shared}
+        - {Key: feature, Value: summarize-nexus}
 
 Outputs:
   DbEndpoint:

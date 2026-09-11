@@ -1,0 +1,40 @@
+# describe-budget — Floci gap + expected real-AWS output
+#
+# Command:
+#   aws budgets describe-budget \
+#     --account-id "$(aws sts get-caller-identity --query Account --output text)" \
+#     --budget-name multistate-monthly-cost-dev
+#
+# Floci result (2026-09-10):
+aws: [ERROR]: An error occurred (UnknownOperationException) when calling the DescribeBudget operation: Unknown operation: AWSBudgetServiceGateway.DescribeBudget
+#
+# Expected on real AWS (from cfn/multistate-cost-dev.yaml — both notifications → SNS):
+#
+# Budget:
+#   BudgetName: multistate-monthly-cost-dev
+#   BudgetType: COST
+#   TimeUnit: MONTHLY
+#   BudgetLimit: { Amount: 100, Unit: USD }
+#   CostFilters:
+#     TagKeyValue:
+#       - user:service$multistate
+#       - user:env$dev
+# NotificationsWithSubscribers:
+#   - Notification:
+#       NotificationType: FORECASTED
+#       ComparisonOperator: GREATER_THAN
+#       Threshold: 80
+#       ThresholdType: PERCENTAGE
+#     Subscribers:
+#       - SubscriptionType: SNS
+#         Address: arn:aws:sns:us-east-1:<account>:multistate-cost-alarms-dev
+#   - Notification:
+#       NotificationType: ACTUAL
+#       ComparisonOperator: GREATER_THAN
+#       Threshold: 100
+#       ThresholdType: PERCENTAGE
+#     Subscribers:
+#       - SubscriptionType: SNS
+#         Address: arn:aws:sns:us-east-1:<account>:multistate-cost-alarms-dev
+#
+# Stack status on Floci: multistate-cost-dev CREATE_COMPLETE

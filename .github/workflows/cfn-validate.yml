@@ -1,7 +1,7 @@
 # .github/workflows/cfn-validate.yml
 # TASK 4 CI gate: every PR that touches cfn/ runs cfn-lint (serverless
 # profile), cfn-nag (--fail-on-warnings), and aws cloudformation
-# validate-template against all four stack templates.
+# validate-template against all five stack templates (incl. cost stack).
 name: cfn-validate
 
 on:

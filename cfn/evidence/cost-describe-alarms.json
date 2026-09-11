@@ -1,0 +1,33 @@
+{
+    "MetricAlarms": [
+        {
+            "AlarmName": "multistate/estimated-charges-dev",
+            "AlarmArn": "arn:aws:cloudwatch:us-east-1:000000000000:alarm:multistate/estimated-charges-dev",
+            "AlarmDescription": "Account-wide EstimatedCharges > 120 USD.",
+            "ActionsEnabled": true,
+            "OKActions": [
+                "arn:aws:sns:us-east-1:000000000000:multistate-cost-alarms-dev"
+            ],
+            "AlarmActions": [
+                "arn:aws:sns:us-east-1:000000000000:multistate-cost-alarms-dev"
+            ],
+            "InsufficientDataActions": [],
+            "StateValue": "INSUFFICIENT_DATA",
+            "StateReason": "Unchecked",
+            "StateUpdatedTimestamp": "2026-09-10T14:25:11-04:00",
+            "MetricName": "EstimatedCharges",
+            "Namespace": "AWS/Billing",
+            "Statistic": "Maximum",
+            "Dimensions": [
+                {
+                    "Name": "Currency",
+                    "Value": "USD"
+                }
+            ],
+            "Period": 21600,
+            "EvaluationPeriods": 1,
+            "Threshold": 120.0,
+            "ComparisonOperator": "GreaterThanThreshold"
+        }
+    ]
+}

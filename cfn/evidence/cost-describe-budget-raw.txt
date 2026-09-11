@@ -1,0 +1,2 @@
+
+aws: [ERROR]: An error occurred (UnknownOperationException) when calling the DescribeBudget operation: Unknown operation: AWSBudgetServiceGateway.DescribeBudget

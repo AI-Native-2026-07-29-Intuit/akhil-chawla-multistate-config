@@ -1,0 +1,36 @@
+{
+    "StackResources": [
+        {
+            "StackName": "multistate-cost-dev",
+            "LogicalResourceId": "CostAlarmsTopic",
+            "PhysicalResourceId": "arn:aws:sns:us-east-1:000000000000:multistate-cost-alarms-dev",
+            "ResourceType": "AWS::SNS::Topic",
+            "Timestamp": "2026-09-10T18:25:11.888135+00:00",
+            "ResourceStatus": "CREATE_COMPLETE"
+        },
+        {
+            "StackName": "multistate-cost-dev",
+            "LogicalResourceId": "CostAlarmsTopicPolicy",
+            "PhysicalResourceId": "CostAlarmsTopicPolicy-927ee7ed",
+            "ResourceType": "AWS::SNS::TopicPolicy",
+            "Timestamp": "2026-09-10T18:25:11.891638+00:00",
+            "ResourceStatus": "CREATE_COMPLETE"
+        },
+        {
+            "StackName": "multistate-cost-dev",
+            "LogicalResourceId": "MonthlyCostBudget",
+            "PhysicalResourceId": "MonthlyCostBudget-00133b67",
+            "ResourceType": "AWS::Budgets::Budget",
+            "Timestamp": "2026-09-10T18:25:11.891647+00:00",
+            "ResourceStatus": "CREATE_COMPLETE"
+        },
+        {
+            "StackName": "multistate-cost-dev",
+            "LogicalResourceId": "EstimatedChargesAlarm",
+            "PhysicalResourceId": "multistate/estimated-charges-dev",
+            "ResourceType": "AWS::CloudWatch::Alarm",
+            "Timestamp": "2026-09-10T18:25:11.891651+00:00",
+            "ResourceStatus": "CREATE_COMPLETE"
+        }
+    ]
+}
