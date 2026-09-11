@@ -29,4 +29,6 @@ spec:
         consumerGroup: multistate-read-model-builder
         topic: tenants.events
         lagThreshold: "10"
-        offsetResetPolicy: latest
+        # Do not set offsetResetPolicy: latest — it caused KEDA to report
+        # lagThreshold (10/10) while consumer-group lag was 4000+, capping
+        # scale-up at 1 pod. Default lag calculation uses the full backlog.
